@@ -1,0 +1,21 @@
+/* Logo aziendale fornito nella cartella public. */
+.brand {
+  height: auto;
+  min-height: 52px;
+  padding: 0;
+}
+
+.brand-logo {
+  display: block;
+  width: 100%;
+  max-width: 218px;
+  height: auto;
+  object-fit: contain;
+}
+
+@media (max-width: 700px) {
+  .brand {
+    width: 166px;
+    min-height: 0;
+  }
+}
