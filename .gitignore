@@ -7,6 +7,10 @@ frontend/dist/
 .env
 .env.*
 !.env.example
+cookies.txt
+cookies*.txt
+login.json
+login*.json
 
 # File caricati e copie di sicurezza (mantenere solo i segnaposto)
 uploads/*
