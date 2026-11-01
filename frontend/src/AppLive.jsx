@@ -240,10 +240,26 @@ function tipologiaRichiedeCodice(tipo) {
   return /centralin|\babs\b|\becu\b|autoradio|\bradio\b|quadro strumenti|navigatore|body computer/i.test(tipo || '')
 }
 
-function PieceForm({ pieces, tipologie, marche, modelli, colori, suggerimenti, onAddTipologia, onAddMarca, onAddModello, onAddColore, onSave }) {
+// Apre la modifica anche quando il pezzo non è nella lista corrente (pagina ricaricata, pezzo venduto o filtrato):
+// senza i dati reali il modulo partirebbe vuoto e il salvataggio creerebbe un ricambio duplicato.
+function ModificaRicambio(props) {
   const { id } = useParams()
+  const inLista = props.pieces.find(piece => piece.id === Number(id))
+  const [remoto, setRemoto] = useState(null)
+  const [errore, setErrore] = useState('')
+  useEffect(() => {
+    if (inLista) return undefined
+    let attivo = true
+    api(`/api/pezzi/${id}`).then(dati => { if (attivo) setRemoto(normalizzaPezzo(dati.pezzo)) }).catch(problema => { if (attivo) setErrore(problema.message) })
+    return () => { attivo = false }
+  }, [id, inLista])
+  const pezzo = inLista || (remoto && remoto.id === Number(id) ? remoto : null)
+  if (!pezzo) return <section className="page-content"><div className="empty-state"><h3>{errore || 'Caricamento scheda ricambio…'}</h3><Link to="/">Torna alla ricerca</Link></div></section>
+  return <PieceForm key={pezzo.id} {...props} existing={pezzo} />
+}
+
+function PieceForm({ existing, pieces, tipologie, marche, modelli, colori, suggerimenti, onAddTipologia, onAddMarca, onAddModello, onAddColore, onSave }) {
   const navigate = useNavigate()
-  const existing = pieces.find(piece => piece.id === Number(id))
   const [form, setForm] = useState(() => existing ? { ...existing } : { tipo: '', marca: '', modello: '', anno: new Date().getFullYear(), colore: '', lato: 'Nessuno', posizione: 'Anteriore', condizione: 'Usato', prezzo: '', codice_oem: '', sigla_motore: '', matricola_motore: '' })
   const [files, setFiles] = useState([])
   const [anteprime, setAnteprime] = useState([])
@@ -547,7 +563,7 @@ function AppContent() {
     <Route path="/" element={<SearchPage pieces={pieces} marche={marcheComplete} modelli={modelli} onChangeStatus={changeStatus} errore={errore} caricamento={caricamento} query={query} setQuery={cambiaQuery} marca={marca} setMarca={cambiaMarca} soloDisponibili={soloDisponibili} setSoloDisponibili={cambiaDisponibilita} modello={modello} setModello={cambiaModello} anno={anno} setAnno={cambiaAnno} codice={codice} setCodice={cambiaCodice} />} />
     <Route path="/pezzo/:id" element={<DetailPage pieces={pieces} onChangeStatus={changeStatus} utente={utente} aggiorna={aggiorna} />} />
     <Route path="/aggiungi" element={<PieceForm pieces={pieces} tipologie={tipologie} marche={marcheComplete} modelli={modelliPerMarca} colori={filtri.colori} suggerimenti={filtri} onAddTipologia={aggiungiTipologia} onAddMarca={aggiungiMarca} onAddModello={aggiungiModello} onAddColore={aggiungiColore} onSave={savePiece} />} />
-    <Route path="/modifica/:id" element={<PieceForm pieces={pieces} tipologie={tipologie} marche={marcheComplete} modelli={modelliPerMarca} colori={filtri.colori} suggerimenti={filtri} onAddTipologia={aggiungiTipologia} onAddMarca={aggiungiMarca} onAddModello={aggiungiModello} onAddColore={aggiungiColore} onSave={savePiece} />} />
+    <Route path="/modifica/:id" element={<ModificaRicambio pieces={pieces} tipologie={tipologie} marche={marcheComplete} modelli={modelliPerMarca} colori={filtri.colori} suggerimenti={filtri} onAddTipologia={aggiungiTipologia} onAddMarca={aggiungiMarca} onAddModello={aggiungiModello} onAddColore={aggiungiColore} onSave={savePiece} />} />
     <Route path="*" element={<SearchPage pieces={pieces} marche={marcheComplete} modelli={modelli} onChangeStatus={changeStatus} errore={errore} caricamento={caricamento} query={query} setQuery={cambiaQuery} marca={marca} setMarca={cambiaMarca} soloDisponibili={soloDisponibili} setSoloDisponibili={cambiaDisponibilita} modello={modello} setModello={cambiaModello} anno={anno} setAnno={cambiaAnno} codice={codice} setCodice={cambiaCodice} />} />
   </Routes></Shell></BrowserRouter>
 }
