@@ -60,6 +60,8 @@ app.use((errore, req, res, next) => {
   if (errore.code === 'ENOENT') return res.status(404).json({ errore: 'File non trovato.' })
   if (errore.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ errore: 'Ogni foto deve pesare al massimo 10 MB.' })
   if (errore.code === 'LIMIT_FILE_COUNT' || errore.code === 'LIMIT_UNEXPECTED_FILE') return res.status(400).json({ errore: 'Puoi caricare al massimo 8 foto per volta.' })
+  if (errore.type === 'entity.parse.failed') return res.status(400).json({ errore: 'I dati inviati non sono in un formato valido.' })
+  if (errore.type === 'entity.too.large') return res.status(413).json({ errore: 'I dati inviati sono troppo grandi.' })
   if (errore.message && errore.message.startsWith('Formato foto non supportato')) return res.status(400).json({ errore: errore.message })
   // I dettagli tecnici vengono registrati nel terminale ma non esposti al browser.
   console.error('Errore interno API:', errore.message)
