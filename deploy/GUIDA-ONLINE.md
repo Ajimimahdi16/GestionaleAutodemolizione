@@ -120,7 +120,7 @@ Apri `https://gestionale.tuodominio.it`: deve comparire la pagina di login con i
   ```bash
   cd /opt/gestionale/backend && sudo -u gestionale -H npm run crea-admin
   ```
-  (l'utente `ricambi_app` ha solo permessi di lettura/scrittura: se `crea-admin` dà errore di permessi, esegui l'inserimento da Workbench o dammi l'errore). Poi, dopo aver verificato il login col nuovo account:
+  Poi, dopo aver verificato il login col nuovo account:
   `sudo mysql gestionale_ricambi -e "UPDATE utenti SET attivo=0 WHERE username='VECCHIO_USERNAME';"`
 - Cancella i file di esportazione: `rm ~/gestionale_dump.sql ~/foto.tar.gz`.
 - Non aprire mai la porta 3306 (MySQL) nel firewall.
@@ -134,7 +134,7 @@ password=PASSWORD_BACKUP
 CNF
 sudo chmod 600 /opt/gestionale/.backup.cnf
 sudo -u gestionale /opt/gestionale/deploy/backup.sh      # prova subito
-sudo -u gestionale crontab -l 2>/dev/null; (sudo -u gestionale crontab -l 2>/dev/null; echo '30 2 * * * /opt/gestionale/deploy/backup.sh >> /opt/gestionale/backups/backup.log 2>&1') | sudo -u gestionale crontab -
+(sudo -u gestionale crontab -l 2>/dev/null; echo '30 2 * * * /opt/gestionale/deploy/backup.sh >> /opt/gestionale/backups/backup.log 2>&1') | sudo -u gestionale crontab -
 ```
 I backup restano 14 giorni in `/opt/gestionale/backups`. In più gli snapshot automatici di Lightsail salvano l'intero server.
 **Prova un ripristino** su un server di prova prima di fidarti: un backup mai provato non è un backup.
