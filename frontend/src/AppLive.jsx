@@ -8,6 +8,9 @@ import './live.css'
 
 const annoMassimoPlausibile = new Date().getFullYear() + 1
 
+// Chiamata da AppContent: riporta al login quando il server dice che la sessione non è più valida.
+let alScadereSessione = null
+
 // Tutte le richieste passano dal proxy Vite in sviluppo e dallo stesso host in produzione.
 async function api(url, options = {}) {
   const risposta = await fetch(url, {
@@ -21,6 +24,7 @@ async function api(url, options = {}) {
   if (!risposta.ok) {
     const errore = new Error(dati.errore || `Richiesta non riuscita (${risposta.status}).`)
     errore.status = risposta.status
+    if (risposta.status === 401 && !url.startsWith('/api/auth/') && alScadereSessione) alScadereSessione()
     throw errore
   }
   return dati
@@ -406,6 +410,11 @@ function AppContent() {
   const [anno, setAnno] = useState('')
   const [codice, setCodice] = useState('')
 
+  useEffect(() => {
+    alScadereSessione = () => { setUtente(null); setPieces([]); setErroreServer('Sessione scaduta. Accedi di nuovo.') }
+    return () => { alScadereSessione = null }
+  }, [])
+
   async function aggiornaCataloghi() {
     const [risultatoTipologie, risultatoMarche, risultatoModelli, risultatoColori] = await Promise.all([
       api('/api/tipologie'), api('/api/marche'), api('/api/veicoli'), api('/api/colori'),
@@ -465,12 +474,9 @@ function AppContent() {
     let attivo = true
     const timer = window.setTimeout(async () => {
       try {
-        const [risultatoPezzi, risultatoFiltri] = await Promise.all([
-          api(`/api/pezzi?${parametriRicerca()}`), api('/api/filtri'),
-        ])
+        const risultatoPezzi = await api(`/api/pezzi?${parametriRicerca()}`)
         if (attivo) {
           setPieces(risultatoPezzi.pezzi.map(normalizzaPezzo))
-          setFiltri(current => ({ ...current, modelli: risultatoFiltri.modelli }))
           setErrore('')
         }
       } catch (problema) { if (attivo) setErrore(problema.message) }
