@@ -515,7 +515,14 @@ function AppContent() {
     if (files.length) {
       const formData = new FormData()
       files.forEach(file => formData.append('foto', file))
-      await api(`/api/pezzi/${id}/foto`, { method: 'POST', body: formData })
+      try {
+        await api(`/api/pezzi/${id}/foto`, { method: 'POST', body: formData })
+      } catch (problema) {
+        // Il ricambio esiste già: ripetere il salvataggio dal modulo ne creerebbe un doppione.
+        await aggiorna().catch(() => {})
+        setErrore(`Ricambio salvato, ma le foto non sono state caricate: ${problema.message} Riprova dalla scheda del ricambio.`)
+        return
+      }
     }
     await aggiorna()
   }
