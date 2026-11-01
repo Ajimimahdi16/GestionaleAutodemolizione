@@ -1,0 +1,19 @@
+[Unit]
+Description=Gestionale Ricambi (backend + interfaccia)
+After=network.target mysql.service
+
+[Service]
+Type=simple
+User=gestionale
+WorkingDirectory=/opt/gestionale/backend
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+# Limita i danni in caso di problemi
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

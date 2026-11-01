@@ -1,0 +1,9 @@
+# Sostituire gestionale.example.it con il vero dominio. Caddy ottiene e rinnova da solo il certificato HTTPS.
+gestionale.example.it {
+	encode gzip
+	# Le foto possono pesare fino a 10 MB ciascuna, 8 per volta.
+	request_body {
+		max_size 90MB
+	}
+	reverse_proxy 127.0.0.1:3000
+}
