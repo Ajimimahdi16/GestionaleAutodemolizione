@@ -5,6 +5,9 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react()],
   server: {
+    // Rende il gestionale raggiungibile da altri dispositivi della rete (es. telefono): http://IP-DEL-PC:5173
+    // Le API passano dal proxy qui sotto, quindi il backend resta in ascolto solo su 127.0.0.1.
+    host: true,
     proxy: {
       '/api': 'http://127.0.0.1:3000',
       '/uploads': 'http://127.0.0.1:3000',
