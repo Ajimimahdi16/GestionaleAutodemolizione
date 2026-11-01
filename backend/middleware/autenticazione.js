@@ -7,7 +7,7 @@ function richiediAccesso(pool) {
     if (!token) return res.status(401).json({ errore: 'Accedi per continuare.' })
 
     try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET)
+      const payload = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] })
       const [utenti] = await pool.execute(
         'SELECT id, username, nome, ruolo, attivo FROM utenti WHERE id = ? LIMIT 1',
         [payload.id],

@@ -5,6 +5,7 @@ const { rateLimit } = require('express-rate-limit')
 const { richiediAccesso } = require('../middleware/autenticazione')
 
 const router = express.Router()
+const HASH_FINTO = bcrypt.hashSync('password-inesistente', 12)
 
 const limiteLogin = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -37,13 +38,15 @@ module.exports = pool => {
         [username],
       )
       const utente = righe[0]
-      const passwordCorretta = utente && await bcrypt.compare(password, utente.password_hash)
+      // Con utente inesistente si confronta comunque un hash finto, così i tempi di risposta non rivelano quali nomi utente esistono.
+      const passwordCorretta = await bcrypt.compare(password, utente ? utente.password_hash : HASH_FINTO)
       if (!utente || !utente.attivo || !passwordCorretta) {
         return res.status(401).json({ errore: 'Nome utente o password non corretti.' })
       }
       if (!process.env.JWT_SECRET) throw new Error('Configurazione sessione non disponibile.')
 
       const token = jwt.sign({ id: utente.id }, process.env.JWT_SECRET, {
+        algorithm: 'HS256',
         expiresIn: process.env.JWT_DURATA || '8h',
       })
       res.cookie('sessione', token, opzioniCookie())
