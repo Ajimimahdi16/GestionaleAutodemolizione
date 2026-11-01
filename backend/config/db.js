@@ -13,6 +13,7 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   charset: 'utf8mb4',
   decimalNumbers: true,
+  enableKeepAlive: true,
 })
 
 module.exports = pool
