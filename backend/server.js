@@ -8,6 +8,7 @@ const cookieParser = require('cookie-parser')
 const helmet = require('helmet')
 const cors = require('cors')
 const pool = require('./config/db')
+const { richiediAccesso } = require('./middleware/autenticazione')
 
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
   console.error('Configurazione non valida: imposta un JWT_SECRET casuale di almeno 32 caratteri nel file .env.')
@@ -49,7 +50,8 @@ app.use('/api', require('./routes/cataloghi')(pool))
 
 // Foto statiche: il caricamento e la gestione verranno aggiunti nella fase dedicata.
 const cartellaFoto = path.resolve(__dirname, '../', process.env.UPLOAD_DIR || 'backend/uploads')
-app.use('/uploads', express.static(cartellaFoto, { fallthrough: false, index: false }))
+// Le foto sono visibili solo a chi ha effettuato l'accesso (il browser invia il cookie di sessione).
+app.use('/uploads', richiediAccesso(pool), express.static(cartellaFoto, { fallthrough: false, index: false }))
 
 app.use('/api', (req, res) => res.status(404).json({ errore: 'Percorso API non trovato.' }))
 app.use((errore, req, res, next) => {
