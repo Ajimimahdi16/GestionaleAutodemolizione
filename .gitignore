@@ -15,6 +15,8 @@ login*.json
 # File caricati e copie di sicurezza (mantenere solo i segnaposto)
 uploads/*
 !uploads/.gitkeep
+backend/uploads/*
+!backend/uploads/.gitkeep
 backups/*
 !backups/.gitkeep
 

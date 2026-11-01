@@ -1,4 +1,9 @@
 const express = require('express')
+const fs = require('fs/promises')
+const path = require('path')
+const crypto = require('crypto')
+const multer = require('multer')
+const sharp = require('sharp')
 const { richiediAccesso, soloAdmin } = require('../middleware/autenticazione')
 
 const router = express.Router()
@@ -11,6 +16,15 @@ const valoriPosizione = {
   sottoscocca: 'sottoscocca', altro: 'altro',
 }
 const etichette = { dx: 'Destro', sx: 'Sinistro', nessuno: 'Nessuno' }
+const cartellaUpload = path.resolve(__dirname, '../../', process.env.UPLOAD_DIR || 'backend/uploads')
+const riceviFoto = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024, files: 8 },
+  fileFilter: (req, file, callback) => {
+    const formati = ['image/jpeg', 'image/png', 'image/webp']
+    callback(formati.includes(file.mimetype) ? null : new Error('Formato foto non supportato: usa JPEG, PNG o WEBP.'), formati.includes(file.mimetype))
+  },
+})
 
 function mappaPezzo(riga) {
   return {
@@ -226,12 +240,46 @@ module.exports = pool => {
   router.patch('/:id/venduto', async (req, res, next) => cambiaStato(pool, req, res, next, 'venduto'))
   router.patch('/:id/disponibile', async (req, res, next) => cambiaStato(pool, req, res, next, 'disponibile'))
 
+  // Le immagini vengono convertite in JPEG e limitate a 1200 px sul lato maggiore.
+  router.post('/:id/foto', riceviFoto.array('foto', 8), async (req, res, next) => {
+    const id = Number(req.params.id)
+    if (!Number.isInteger(id) || id < 1) return res.status(400).json({ errore: 'Identificativo ricambio non valido.' })
+    if (!req.files || req.files.length === 0) return res.status(400).json({ errore: 'Seleziona almeno una foto.' })
+    const fileSalvati = []
+    try {
+      const [pezzi] = await pool.execute('SELECT id FROM pezzi WHERE id = ? LIMIT 1', [id])
+      if (!pezzi.length) return res.status(404).json({ errore: 'Ricambio non trovato.' })
+      await fs.mkdir(cartellaUpload, { recursive: true })
+      const [fotoEsistenti] = await pool.execute('SELECT COUNT(*) AS totale FROM foto_pezzo WHERE pezzo_id = ?', [id])
+      for (const [indice, file] of req.files.entries()) {
+        const nomeFile = `${id}-${crypto.randomUUID()}.jpg`
+        const percorso = path.join(cartellaUpload, nomeFile)
+        const jpeg = await sharp(file.buffer).rotate().resize({ width: 1200, height: 1200, fit: 'inside', withoutEnlargement: true }).jpeg({ quality: 80 }).toBuffer()
+        await fs.writeFile(percorso, jpeg, { flag: 'wx' })
+        fileSalvati.push({ nomeFile, percorso })
+        const principale = Number(fotoEsistenti[0].totale) === 0 && indice === 0
+        await pool.execute('INSERT INTO foto_pezzo (pezzo_id, nome_file, principale) VALUES (?, ?, ?)', [id, nomeFile, principale])
+      }
+      res.status(201).json({ messaggio: 'Foto caricate correttamente.', foto: fileSalvati.map(file => `/uploads/${encodeURIComponent(file.nomeFile)}`) })
+    } catch (errore) {
+      await Promise.all(fileSalvati.map(async file => {
+        await pool.execute('DELETE FROM foto_pezzo WHERE nome_file = ?', [file.nomeFile]).catch(() => {})
+        await fs.unlink(file.percorso).catch(() => {})
+      }))
+      next(errore)
+    }
+  })
+
   router.delete('/:id', soloAdmin, async (req, res, next) => {
     try {
       const id = Number(req.params.id)
       if (!Number.isInteger(id) || id < 1) return res.status(400).json({ errore: 'Identificativo ricambio non valido.' })
+      const [foto] = await pool.execute('SELECT nome_file FROM foto_pezzo WHERE pezzo_id = ?', [id])
       const [risultato] = await pool.execute('DELETE FROM pezzi WHERE id = ?', [id])
       if (!risultato.affectedRows) return res.status(404).json({ errore: 'Ricambio non trovato.' })
+      await Promise.all(foto.map(({ nome_file }) => fs.unlink(path.join(cartellaUpload, path.basename(nome_file))).catch(errore => {
+        if (errore.code !== 'ENOENT') console.error('Impossibile rimuovere un file foto:', errore.message)
+      })))
       res.json({ messaggio: 'Ricambio eliminato definitivamente.' })
     } catch (errore) { next(errore) }
   })
