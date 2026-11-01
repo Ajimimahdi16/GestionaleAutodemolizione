@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { BrowserRouter, Link, NavLink, Route, Routes, useNavigate, useParams } from 'react-router-dom'
 import { catalogoMarche, catalogoModelli } from './catalogoVeicoli.js'
 import SearchableSelect from './SearchableSelect.jsx'
@@ -422,9 +422,24 @@ function AppContent() {
     return () => { attivo = false; window.clearTimeout(timer) }
   }, [utente])
 
+  // Parametri della ricerca corrente: usati sia dai filtri sia dopo ogni salvataggio, così la lista resta coerente.
+  const parametriRicerca = useCallback(() => {
+    const parametri = new URLSearchParams()
+    parametri.set('includi_venduti', 'true')
+    if (query.trim()) parametri.set('q', query.trim())
+    if (marca) parametri.set('marca', marca)
+    if (modello) parametri.set('modello', modello)
+    const annoInserito = Number(anno)
+    const annoMassimo = new Date().getFullYear() + 1
+    if (anno && Number.isInteger(annoInserito) && annoInserito >= 1950 && annoInserito <= annoMassimo) parametri.set('anno', anno)
+    if (codice.trim()) parametri.set('codice', codice.trim())
+    if (soloDisponibili) parametri.set('stato', 'disponibile')
+    return parametri.toString()
+  }, [query, marca, modello, anno, codice, soloDisponibili])
+
   async function aggiorna() {
     const [risultatoPezzi] = await Promise.all([
-      api('/api/pezzi?includi_venduti=true'), aggiornaCataloghi(),
+      api(`/api/pezzi?${parametriRicerca()}`), aggiornaCataloghi(),
     ])
     setPieces(risultatoPezzi.pezzi.map(normalizzaPezzo))
   }
@@ -433,19 +448,9 @@ function AppContent() {
     if (!utente) return undefined
     let attivo = true
     const timer = window.setTimeout(async () => {
-      const parametri = new URLSearchParams()
-      parametri.set('includi_venduti', 'true')
-      if (query.trim()) parametri.set('q', query.trim())
-      if (marca) parametri.set('marca', marca)
-      if (modello) parametri.set('modello', modello)
-      const annoInserito = Number(anno)
-      const annoMassimo = new Date().getFullYear() + 1
-      if (anno && Number.isInteger(annoInserito) && annoInserito >= 1950 && annoInserito <= annoMassimo) parametri.set('anno', anno)
-      if (codice.trim()) parametri.set('codice', codice.trim())
-      if (soloDisponibili) parametri.set('stato', 'disponibile')
       try {
         const [risultatoPezzi, risultatoFiltri] = await Promise.all([
-          api(`/api/pezzi?${parametri.toString()}`), api('/api/filtri'),
+          api(`/api/pezzi?${parametriRicerca()}`), api('/api/filtri'),
         ])
         if (attivo) {
           setPieces(risultatoPezzi.pezzi.map(normalizzaPezzo))
@@ -456,7 +461,7 @@ function AppContent() {
       finally { if (attivo) setCaricamento(false) }
     }, 250)
     return () => { attivo = false; window.clearTimeout(timer) }
-  }, [utente, query, marca, modello, anno, codice, soloDisponibili])
+  }, [utente, parametriRicerca])
 
   async function login(username, password) {
     const dati = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) })
@@ -473,7 +478,7 @@ function AppContent() {
   const cambiaCodice = valore => { setCaricamento(true); setCodice(valore) }
 
   async function logout() {
-    try { await api('/api/auth/logout', { method: 'POST' }) } finally { setUtente(null); setPieces([]) }
+    try { await api('/api/auth/logout', { method: 'POST' }) } catch { /* sessione già scaduta: si esce comunque */ } finally { setUtente(null); setPieces([]) }
   }
 
   async function changeStatus(id, stato) {
