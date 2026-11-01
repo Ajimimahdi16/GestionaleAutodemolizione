@@ -83,9 +83,19 @@ const server = app.listen(porta, host, () => {
 
 async function chiudiServer() {
   server.close()
-  await pool.end()
+  await pool.end().catch(() => {})
+  process.exit(0)
 }
 process.on('SIGINT', chiudiServer)
 process.on('SIGTERM', chiudiServer)
+
+// Un errore imprevisto fuori da una richiesta viene registrato senza far cadere il server.
+process.on('unhandledRejection', motivo => {
+  console.error('Errore asincrono non gestito:', motivo && motivo.message ? motivo.message : motivo)
+})
+server.on('error', errore => {
+  console.error(`Impossibile avviare il server su ${host}:${porta}: ${errore.message}`)
+  process.exit(1)
+})
 
 module.exports = app
