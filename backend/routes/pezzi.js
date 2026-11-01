@@ -77,6 +77,21 @@ function verificaCorpo(body) {
   return { errors, valori: { anno, lato, condizione, posizione, prezzo, codice, codiceOem, siglaMotore, matricolaMotore, note } }
 }
 
+// Restituiscono l'id esistente oppure creano la voce mancante, dentro la transazione in corso.
+async function trovaOCreaVeicolo(connessione, marca, modello, anno) {
+  const [veicoli] = await connessione.execute('SELECT id FROM veicoli WHERE marca = ? AND modello = ? ORDER BY id LIMIT 1', [marca, modello])
+  if (veicoli.length) return veicoli[0].id
+  const [nuovoVeicolo] = await connessione.execute('INSERT INTO veicoli (marca, modello, anno_da, anno_a) VALUES (?, ?, ?, ?)', [marca, modello, anno, anno])
+  return nuovoVeicolo.insertId
+}
+
+async function trovaOCreaTipologia(connessione, nome) {
+  const [tipologie] = await connessione.execute('SELECT id FROM tipologie_pezzo WHERE nome = ? LIMIT 1', [nome])
+  if (tipologie.length) return tipologie[0].id
+  const [nuovaTipologia] = await connessione.execute('INSERT INTO tipologie_pezzo (nome) VALUES (?)', [nome])
+  return nuovaTipologia.insertId
+}
+
 const SELECT_PEZZI = `
   SELECT p.id, p.codice, p.codice_oem, p.sigla_motore, p.matricola_motore, p.anno, p.colore, p.lato, p.posizione, p.condizione,
          p.stato, p.prezzo, p.note, p.data_inserimento, p.data_vendita,
@@ -174,22 +189,8 @@ module.exports = pool => {
       connessione = await pool.getConnection()
       await connessione.beginTransaction()
       const { anno, lato, condizione, posizione, prezzo, codice, codiceOem, siglaMotore, matricolaMotore, note } = validazione.valori
-      const marca = req.body.marca.trim()
-      const modello = req.body.modello.trim()
-      let [veicoli] = await connessione.execute('SELECT id FROM veicoli WHERE marca = ? AND modello = ? ORDER BY id LIMIT 1', [marca, modello])
-      let veicoloId
-      if (veicoli.length) veicoloId = veicoli[0].id
-      else {
-        const [nuovoVeicolo] = await connessione.execute('INSERT INTO veicoli (marca, modello, anno_da, anno_a) VALUES (?, ?, ?, ?)', [marca, modello, anno, anno])
-        veicoloId = nuovoVeicolo.insertId
-      }
-      let [tipologie] = await connessione.execute('SELECT id FROM tipologie_pezzo WHERE nome = ? LIMIT 1', [req.body.tipo.trim()])
-      let tipologiaId
-      if (tipologie.length) tipologiaId = tipologie[0].id
-      else {
-        const [nuovaTipologia] = await connessione.execute('INSERT INTO tipologie_pezzo (nome) VALUES (?)', [req.body.tipo.trim()])
-        tipologiaId = nuovaTipologia.insertId
-      }
+      const veicoloId = await trovaOCreaVeicolo(connessione, req.body.marca.trim(), req.body.modello.trim(), anno)
+      const tipologiaId = await trovaOCreaTipologia(connessione, req.body.tipo.trim())
       const codiceFinale = codice || `RT-${Date.now().toString(36).toUpperCase()}`
       const [inserimento] = await connessione.execute(
         `INSERT INTO pezzi (codice, codice_oem, sigla_motore, matricola_motore, veicolo_id, tipologia_id, anno, colore, lato, posizione, condizione, stato, prezzo, note, inserito_da)
@@ -214,22 +215,8 @@ module.exports = pool => {
       connessione = await pool.getConnection()
       await connessione.beginTransaction()
       const { anno, lato, condizione, posizione, prezzo, codice, codiceOem, siglaMotore, matricolaMotore, note } = validazione.valori
-      const marca = req.body.marca.trim()
-      const modello = req.body.modello.trim()
-      let [veicoli] = await connessione.execute('SELECT id FROM veicoli WHERE marca = ? AND modello = ? ORDER BY id LIMIT 1', [marca, modello])
-      let veicoloId
-      if (veicoli.length) veicoloId = veicoli[0].id
-      else {
-        const [nuovoVeicolo] = await connessione.execute('INSERT INTO veicoli (marca, modello, anno_da, anno_a) VALUES (?, ?, ?, ?)', [marca, modello, anno, anno])
-        veicoloId = nuovoVeicolo.insertId
-      }
-      let [tipologie] = await connessione.execute('SELECT id FROM tipologie_pezzo WHERE nome = ? LIMIT 1', [req.body.tipo.trim()])
-      let tipologiaId
-      if (tipologie.length) tipologiaId = tipologie[0].id
-      else {
-        const [nuovaTipologia] = await connessione.execute('INSERT INTO tipologie_pezzo (nome) VALUES (?)', [req.body.tipo.trim()])
-        tipologiaId = nuovaTipologia.insertId
-      }
+      const veicoloId = await trovaOCreaVeicolo(connessione, req.body.marca.trim(), req.body.modello.trim(), anno)
+      const tipologiaId = await trovaOCreaTipologia(connessione, req.body.tipo.trim())
       const [aggiornamento] = await connessione.execute(
         `UPDATE pezzi SET codice = COALESCE(?, codice), codice_oem = ?, sigla_motore = ?, matricola_motore = ?, veicolo_id = ?, tipologia_id = ?, anno = ?, colore = ?, lato = ?, posizione = ?, condizione = ?, prezzo = ?, note = ? WHERE id = ?`,
         [codice, codiceOem, siglaMotore, matricolaMotore, veicoloId, tipologiaId, anno, req.body.colore.trim(), lato, posizione, condizione, prezzo, note, id],
