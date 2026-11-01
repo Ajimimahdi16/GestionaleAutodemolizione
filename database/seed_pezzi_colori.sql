@@ -2,6 +2,19 @@
 -- Aggiunge voci mancanti, non cancella né modifica i ricambi esistenti.
 USE gestionale_ricambi;
 
+-- Anche l'API /api/marche usa un catalogo dedicato.
+-- Popoliamo la tabella con le marche già presenti nei veicoli.
+CREATE TABLE IF NOT EXISTS marche (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  nome VARCHAR(80) NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_marche_nome (nome)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO marche (nome)
+SELECT DISTINCT TRIM(marca) FROM veicoli
+WHERE marca IS NOT NULL AND TRIM(marca) <> '';
+
 -- I nomi sono univoci e senza distinzione tra maiuscole/minuscole.
 CREATE TABLE IF NOT EXISTS colori (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
