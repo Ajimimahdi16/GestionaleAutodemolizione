@@ -22,22 +22,40 @@ CREATE TABLE IF NOT EXISTS veicoli (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   marca VARCHAR(80) NOT NULL,
   modello VARCHAR(100) NOT NULL,
-  anno_da SMALLINT UNSIGNED NOT NULL,
-  anno_a SMALLINT UNSIGNED NOT NULL,
+  anno_da SMALLINT UNSIGNED NULL,
+  anno_a SMALLINT UNSIGNED NULL,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_veicolo (marca, modello, anno_da, anno_a)
+  UNIQUE KEY uq_veicoli_marca_modello (marca, modello)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS marche (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  nome VARCHAR(80) NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_marche_nome (nome)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS tipologie_pezzo (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   nome VARCHAR(120) NOT NULL,
+  tipo_codice ENUM('nessuno', 'codice', 'motore') NOT NULL DEFAULT 'nessuno',
   PRIMARY KEY (id),
   UNIQUE KEY uq_tipologia_nome (nome)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS colori (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  nome VARCHAR(80) NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_colori_nome (nome)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS pezzi (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   codice VARCHAR(40) NOT NULL,
+  codice_oem VARCHAR(60) NULL,
+  sigla_motore VARCHAR(40) NULL,
+  matricola_motore VARCHAR(60) NULL,
   veicolo_id INT UNSIGNED NOT NULL,
   tipologia_id INT UNSIGNED NOT NULL,
   anno SMALLINT UNSIGNED NOT NULL,
@@ -57,6 +75,8 @@ CREATE TABLE IF NOT EXISTS pezzi (
   KEY idx_pezzi_tipologia (tipologia_id),
   KEY idx_pezzi_stato (stato),
   KEY idx_pezzi_colore (colore),
+  KEY idx_pezzi_codice_oem (codice_oem),
+  KEY idx_pezzi_sigla_motore (sigla_motore),
   CONSTRAINT fk_pezzi_veicoli FOREIGN KEY (veicolo_id)
     REFERENCES veicoli (id) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT fk_pezzi_tipologie FOREIGN KEY (tipologia_id)

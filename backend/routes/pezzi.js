@@ -66,13 +66,19 @@ function verificaCorpo(body) {
   }
   const codice = body.codice === undefined || body.codice === '' ? null : body.codice
   if (codice !== null && !testo(codice, 40)) errors.push('Il codice deve contenere al massimo 40 caratteri.')
+  const codiceOem = body.codice_oem === undefined || body.codice_oem === '' ? null : body.codice_oem
+  if (codiceOem !== null && !testo(codiceOem, 60)) errors.push('Il codice OEM deve contenere al massimo 60 caratteri.')
+  const siglaMotore = body.sigla_motore === undefined || body.sigla_motore === '' ? null : body.sigla_motore
+  if (siglaMotore !== null && !testo(siglaMotore, 40)) errors.push('La sigla motore deve contenere al massimo 40 caratteri.')
+  const matricolaMotore = body.matricola_motore === undefined || body.matricola_motore === '' ? null : body.matricola_motore
+  if (matricolaMotore !== null && !testo(matricolaMotore, 60)) errors.push('La matricola motore deve contenere al massimo 60 caratteri.')
   const note = body.note === undefined || body.note === null ? null : body.note
   if (note !== null && (typeof note !== 'string' || note.length > 5000)) errors.push('Le note non possono superare 5000 caratteri.')
-  return { errors, valori: { anno, lato, condizione, posizione, prezzo, codice, note } }
+  return { errors, valori: { anno, lato, condizione, posizione, prezzo, codice, codiceOem, siglaMotore, matricolaMotore, note } }
 }
 
 const SELECT_PEZZI = `
-  SELECT p.id, p.codice, p.anno, p.colore, p.lato, p.posizione, p.condizione,
+  SELECT p.id, p.codice, p.codice_oem, p.sigla_motore, p.matricola_motore, p.anno, p.colore, p.lato, p.posizione, p.condizione,
          p.stato, p.prezzo, p.note, p.data_inserimento, p.data_vendita,
          v.id AS veicolo_id, v.marca, v.modello, t.id AS tipologia_id, t.nome AS tipo,
          (SELECT fp.nome_file FROM foto_pezzo fp
@@ -93,8 +99,8 @@ module.exports = pool => {
       const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 200) : ''
       for (const parola of q.split(/\s+/).filter(Boolean)) {
         const like = `%${parola}%`
-        where.push('(v.marca LIKE ? OR v.modello LIKE ? OR t.nome LIKE ? OR p.colore LIKE ? OR p.codice LIKE ?)')
-        params.push(like, like, like, like, like)
+        where.push('(v.marca LIKE ? OR v.modello LIKE ? OR t.nome LIKE ? OR p.colore LIKE ? OR p.codice LIKE ? OR p.codice_oem LIKE ? OR p.sigla_motore LIKE ? OR p.matricola_motore LIKE ?)')
+        params.push(like, like, like, like, like, like, like, like)
       }
       const filtriTestuali = [
         ['marca', 'v.marca', 80], ['modello', 'v.modello', 100], ['colore', 'p.colore', 80],
@@ -105,6 +111,12 @@ module.exports = pool => {
           where.push(`${colonna} = ?`)
           params.push(req.query[chiave].trim())
         }
+      }
+      if (req.query.codice !== undefined) {
+        if (!testo(req.query.codice, 80)) return res.status(400).json({ errore: 'Filtro codice non valido.' })
+        where.push('(p.codice LIKE ? OR p.codice_oem LIKE ? OR p.sigla_motore LIKE ? OR p.matricola_motore LIKE ?)')
+        const codice = `%${req.query.codice.trim()}%`
+        params.push(codice, codice, codice, codice)
       }
       if (req.query.anno !== undefined) {
         const anno = Number(req.query.anno)
@@ -161,7 +173,7 @@ module.exports = pool => {
     try {
       connessione = await pool.getConnection()
       await connessione.beginTransaction()
-      const { anno, lato, condizione, posizione, prezzo, codice, note } = validazione.valori
+      const { anno, lato, condizione, posizione, prezzo, codice, codiceOem, siglaMotore, matricolaMotore, note } = validazione.valori
       const marca = req.body.marca.trim()
       const modello = req.body.modello.trim()
       let [veicoli] = await connessione.execute('SELECT id FROM veicoli WHERE marca = ? AND modello = ? ORDER BY id LIMIT 1', [marca, modello])
@@ -180,9 +192,9 @@ module.exports = pool => {
       }
       const codiceFinale = codice || `RT-${Date.now().toString(36).toUpperCase()}`
       const [inserimento] = await connessione.execute(
-        `INSERT INTO pezzi (codice, veicolo_id, tipologia_id, anno, colore, lato, posizione, condizione, stato, prezzo, note, inserito_da)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [codiceFinale, veicoloId, tipologiaId, anno, req.body.colore.trim(), lato, posizione, condizione, 'disponibile', prezzo, note, req.utente.id],
+        `INSERT INTO pezzi (codice, codice_oem, sigla_motore, matricola_motore, veicolo_id, tipologia_id, anno, colore, lato, posizione, condizione, stato, prezzo, note, inserito_da)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [codiceFinale, codiceOem, siglaMotore, matricolaMotore, veicoloId, tipologiaId, anno, req.body.colore.trim(), lato, posizione, condizione, 'disponibile', prezzo, note, req.utente.id],
       )
       await connessione.commit()
       res.status(201).json({ messaggio: 'Ricambio aggiunto correttamente.', id: inserimento.insertId, codice: codiceFinale })
@@ -201,7 +213,7 @@ module.exports = pool => {
     try {
       connessione = await pool.getConnection()
       await connessione.beginTransaction()
-      const { anno, lato, condizione, posizione, prezzo, codice, note } = validazione.valori
+      const { anno, lato, condizione, posizione, prezzo, codice, codiceOem, siglaMotore, matricolaMotore, note } = validazione.valori
       const marca = req.body.marca.trim()
       const modello = req.body.modello.trim()
       let [veicoli] = await connessione.execute('SELECT id FROM veicoli WHERE marca = ? AND modello = ? ORDER BY id LIMIT 1', [marca, modello])
@@ -219,8 +231,8 @@ module.exports = pool => {
         tipologiaId = nuovaTipologia.insertId
       }
       const [aggiornamento] = await connessione.execute(
-        `UPDATE pezzi SET codice = COALESCE(?, codice), veicolo_id = ?, tipologia_id = ?, anno = ?, colore = ?, lato = ?, posizione = ?, condizione = ?, prezzo = ?, note = ? WHERE id = ?`,
-        [codice, veicoloId, tipologiaId, anno, req.body.colore.trim(), lato, posizione, condizione, prezzo, note, id],
+        `UPDATE pezzi SET codice = COALESCE(?, codice), codice_oem = ?, sigla_motore = ?, matricola_motore = ?, veicolo_id = ?, tipologia_id = ?, anno = ?, colore = ?, lato = ?, posizione = ?, condizione = ?, prezzo = ?, note = ? WHERE id = ?`,
+        [codice, codiceOem, siglaMotore, matricolaMotore, veicoloId, tipologiaId, anno, req.body.colore.trim(), lato, posizione, condizione, prezzo, note, id],
       )
       if (!aggiornamento.affectedRows) {
         const [esistente] = await connessione.execute('SELECT id FROM pezzi WHERE id = ?', [id])

@@ -9,7 +9,27 @@ Applicazione locale per AUTODEMOLIZIONE RICAMBI TORINO SRL. Il progetto usa Reac
 
 ## 1. Preparare MySQL
 
-Da MySQL Workbench, apri ed esegui in ordine `database/schema.sql` e `database/seed.sql`. Il seed inserisce sei ricambi dimostrativi e può riallineare quei record agli ID del demo.
+Per caricare solo i cataloghi Pezzo e Colore sul database già esistente, esegui `database/seed_pezzi_colori.sql` da MySQL Workbench oppure usa il comando riportato sotto. Lo script inserisce le voci mancanti senza cancellare i ricambi esistenti.
+
+Se il database è già esistente, dalla cartella principale puoi applicare/aggiornare il catalogo con:
+
+```sh
+mysql -u root -p gestionale_ricambi < database/seed_pezzi_colori.sql
+```
+
+MySQL chiederà la password di root nel terminale. Verifica in Workbench che `SELECT COUNT(*) FROM tipologie_pezzo;` restituisca almeno 200, che `SELECT COUNT(*) FROM colori;` restituisca più di 0 e che non ci siano doppioni con `SELECT marca, modello, COUNT(*) FROM veicoli GROUP BY marca, modello HAVING COUNT(*) > 1;` (risultato atteso: nessuna riga).
+
+Se il database è già stato creato, applica questa migrazione con MySQL 8.4 dalla cartella principale:
+
+```sh
+/usr/local/mysql/bin/mysql -u root -p gestionale_ricambi < database/migrazione_codici.sql
+```
+
+Per verificare le colonne e confermare che `codice` interno è ancora presente:
+
+```sh
+/usr/local/mysql/bin/mysql -u root -p gestionale_ricambi -e "SELECT TABLE_NAME, COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND ((TABLE_NAME='pezzi' AND COLUMN_NAME IN ('codice','codice_oem','sigla_motore','matricola_motore')) OR (TABLE_NAME='tipologie_pezzo' AND COLUMN_NAME='tipo_codice')) ORDER BY TABLE_NAME, COLUMN_NAME;"
+```
 
 Crea poi un utente MySQL applicativo dedicato con accesso limitato al database `gestionale_ricambi`; non configurare l'app con `root`. Se l'utente applicativo esiste già, dopo aver ruotato la password condivisa in precedenza, inserisci la nuova password soltanto nel `.env` locale.
 
@@ -76,6 +96,9 @@ Apri `http://localhost:3000`. Per uscire, premi `Ctrl+C` nel terminale del backe
 - `PATCH /api/pezzi/:id/venduto` e `PATCH /api/pezzi/:id/disponibile`
 - `POST /api/pezzi/:id/foto` e `DELETE /api/foto/:id` (solo amministratore per eliminazione)
 - `GET/POST /api/veicoli`, `GET/POST /api/tipologie`, `GET /api/filtri`
+- `GET/POST /api/marche`, `GET/POST /api/modelli?marca=...`, `GET/POST /api/colori`; tutti richiedono una sessione attiva.
+- Ricerca libera e filtro codice consultano codice interno, codice OEM, sigla motore e matricola motore.
+- Il catalogo frontend include marche e modelli comuni; i veicoli realmente presenti nel database vengono aggiunti alle scelte.
 - `GET /health` controlla Express; `GET /health/database` prova la connessione MySQL e restituisce 503 se non è disponibile.
 
 Le foto accettate sono JPEG, PNG o WEBP, massimo 10 MB ciascuna e otto per richiesta. Il server le converte in JPEG e le ridimensiona fino a 1200 px, salvandole in `backend/uploads/`.
