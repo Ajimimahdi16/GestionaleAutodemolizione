@@ -77,6 +77,8 @@ CREATE TABLE IF NOT EXISTS pezzi (
   KEY idx_pezzi_colore (colore),
   KEY idx_pezzi_codice_oem (codice_oem),
   KEY idx_pezzi_sigla_motore (sigla_motore),
+  KEY idx_pezzi_matricola_motore (matricola_motore),
+  KEY idx_pezzi_inserimento (data_inserimento, id),
   CONSTRAINT fk_pezzi_veicoli FOREIGN KEY (veicolo_id)
     REFERENCES veicoli (id) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT fk_pezzi_tipologie FOREIGN KEY (tipologia_id)
