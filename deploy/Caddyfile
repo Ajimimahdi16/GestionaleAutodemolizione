@@ -1,9 +1,21 @@
-# Sostituire gestionale.example.it con il vero dominio. Caddy ottiene e rinnova da solo il certificato HTTPS.
-gestionale.example.it {
+# Sostituire app.example.it e example.it con i domini veri. Caddy ottiene e rinnova da solo i certificati HTTPS.
+
+# Gestionale (area riservata, solo per il personale)
+app.example.it {
 	encode gzip
 	# Le foto possono pesare fino a 10 MB ciascuna, 8 per volta.
 	request_body {
 		max_size 90MB
 	}
 	reverse_proxy 127.0.0.1:3000
+}
+
+# Sito pubblico per i clienti
+example.it {
+	encode gzip
+	reverse_proxy 127.0.0.1:3000
+}
+
+www.example.it {
+	redir https://example.it{uri} permanent
 }

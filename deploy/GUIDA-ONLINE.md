@@ -151,3 +151,30 @@ Per vedere gli errori: `sudo journalctl -u gestionale -n 100 --no-pager`.
 
 ## 12. Prova finale
 Da telefono con dati mobili (non Wi-Fi) e dal PC del lavoro: login, ricerca, aggiunta ricambio con foto, cambio stato, logout.
+
+## 13. Sito pubblico per i clienti
+
+Il sito vive nella cartella `sito-pubblico` e usa lo stesso server e lo stesso database del gestionale, ma è separato:
+mostra solo se un pezzo è disponibile (mai prezzi, codici interni o note) e non può accedere alla parte riservata.
+
+**DNS** (dal pannello del dominio):
+- record `A` con nome `@` → IP del server (sostituisce la pagina predefinita del provider; non toccare i record `MX` della posta);
+- record `A` con nome `www` → IP del server.
+
+**Sul server:**
+```bash
+echo 'GESTIONALE_HOST=app.tuodominio.it' | sudo tee -a /opt/gestionale/.env
+cd /opt/gestionale && sudo -u gestionale -H git pull
+cd sito-pubblico && sudo -u gestionale -H npm ci && sudo -u gestionale -H npm run build
+cd ../backend && sudo -u gestionale -H npm ci --omit=dev
+cd ../frontend && sudo -u gestionale -H npm ci && sudo -u gestionale -H npm run build
+sudo cp /opt/gestionale/deploy/Caddyfile /etc/caddy/Caddyfile
+sudo nano /etc/caddy/Caddyfile        # sostituisci app.example.it e example.it con i domini veri
+sudo systemctl reload caddy
+sudo systemctl restart gestionale
+```
+Controlli: `https://tuodominio.it` mostra il sito pubblico; `https://app.tuodominio.it` mostra il login del gestionale.
+
+**Contenuti da aggiornare nel codice** (poi build e riavvio come al punto 11):
+- recensioni reali: `sito-pubblico/src/dati/recensioni.js` (copiate dalla scheda Google, mai inventate);
+- orari, telefoni, indirizzo e link social: `sito-pubblico/src/dati/azienda.js`.

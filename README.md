@@ -12,6 +12,9 @@ per tipo di pezzo, marca, modello, anno, colore, lato (DX/SX), condizione e stat
 - Interfaccia nei colori dell'azienda (giallo e nero), utilizzabile da computer e telefono
 - Backup notturno di database e foto
 
+## Sito pubblico
+Nella cartella `sito-pubblico` c'è il sito per i clienti: vetrina, ricerca della disponibilità dei pezzi (collegata al gestionale, senza prezzi), ritiro veicoli, mappa, orari e social.
+
 ## Tecnologie
 React + Vite, Node.js + Express, MySQL
 
