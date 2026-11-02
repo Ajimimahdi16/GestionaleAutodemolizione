@@ -291,6 +291,7 @@ button { font: inherit; cursor: pointer; }
   .social-griglia { grid-template-columns: 1fr; }
   .eroe-azioni .pulsante, .ritiro-azioni .pulsante, .dove-azioni .pulsante { width: 100%; }
   .intestazione .pulsante span { display: none; }
+  .punto-area { r: 40px; }
   .punto-nucleo { r: 15px; }
   .punto.attivo .punto-nucleo { r: 18px; }
   .auto-scheda em { margin-left: 0; }
