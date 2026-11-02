@@ -245,6 +245,35 @@ button { font: inherit; cursor: pointer; }
 .ritiro-passi strong { font-family: var(--titoli); font-size: 17px; }
 .ritiro-passi span { margin-top: 2px; font-size: 15px; line-height: 1.5; opacity: .8; }
 
+/* Procedura di demolizione */
+.procedura { margin-top: 28px; padding: clamp(22px, 4vw, 44px); background: var(--carbone); border: 1px solid var(--linea); border-radius: 8px; }
+.procedura-testa { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 28px; }
+.procedura h3 { margin: 0; font-family: var(--titoli); font-weight: 800; font-size: clamp(26px, 3.4vw, 38px); letter-spacing: -.025em; }
+.procedura-schede { display: inline-flex; padding: 5px; gap: 4px; background: var(--nero); border: 1px solid var(--linea); border-radius: 6px; }
+.procedura-schede button { min-height: 46px; padding: 0 20px; color: var(--attenuato); background: none; border: 0; border-radius: 4px; font-family: var(--titoli); font-weight: 800; font-size: 14px; transition: background .2s, color .2s; }
+.procedura-schede button:hover { color: var(--testo); }
+.procedura-schede button.attiva { background: var(--giallo); color: var(--inchiostro); }
+.procedura-pannello { animation: sale .45s cubic-bezier(.2, .7, .2, 1) both; }
+.procedura-pannello h4 { margin: 0 0 8px; font-family: var(--titoli); font-weight: 800; font-size: 22px; color: var(--giallo); }
+.procedura-intro { max-width: 720px; margin-bottom: 26px; color: #d3d3cb; font-size: 18px; }
+.procedura-pannello h5 { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; font-family: var(--titoli); font-weight: 800; font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: var(--attenuato); }
+.procedura-pannello h5 svg { width: 18px; height: 18px; color: var(--giallo); }
+.documenti { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin: 0; padding: 0; list-style: none; }
+.documenti li { display: flex; gap: 14px; align-items: flex-start; padding: 18px; background: var(--nero); border: 1px solid var(--linea); border-radius: 6px; }
+.documento-spunta { display: grid; place-items: center; flex: none; width: 34px; height: 34px; background: rgba(255, 196, 0, .14); color: var(--giallo); border-radius: 50%; }
+.documento-spunta svg { width: 18px; height: 18px; }
+.documenti strong { display: block; font-family: var(--titoli); font-size: 17px; line-height: 1.3; }
+.documenti small { display: block; margin-top: 6px; color: var(--attenuato); font-size: 14px; line-height: 1.5; }
+.documento-mancante { display: flex; align-items: flex-start; gap: 12px; margin: 16px 0 0; padding: 14px 18px; color: #ffe0a8; background: rgba(255, 176, 32, .09); border: 1px solid rgba(255, 176, 32, .4); border-radius: 6px; font-size: 16px; }
+.documento-mancante svg { flex: none; margin-top: 2px; color: var(--ambra); }
+.residenza { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 28px; }
+.residenza-scheda { padding: 22px; background: var(--nero); border: 1px solid var(--linea); border-left: 4px solid var(--giallo); border-radius: 6px; }
+.residenza-scheda ul { display: grid; gap: 16px; margin: 0; padding: 0; list-style: none; }
+.residenza-scheda li strong { display: block; font-family: var(--titoli); font-size: 17px; margin-bottom: 4px; }
+.residenza-scheda li span { color: var(--attenuato); font-size: 16px; line-height: 1.55; }
+.residenza-azioni { display: flex; flex-wrap: wrap; gap: 12px; grid-column: 1 / -1; margin-top: 26px; }
+.residenza .residenza-azioni { margin-top: 4px; }
+
 /* ---------- Recensioni ---------- */
 .recensioni-griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 18px; margin: 34px 0 22px; }
 .recensione { height: 100%; margin: 0; padding: 26px; background: var(--carbone); border: 1px solid var(--linea); border-radius: 6px; }
@@ -316,7 +345,8 @@ button { font: inherit; cursor: pointer; }
   .contenitore { width: min(1180px, 100% - 36px); }
   .esito-scheletro { grid-template-columns: 1fr; }
   .social-griglia { grid-template-columns: 1fr; }
-  .eroe-azioni .pulsante, .ritiro-azioni .pulsante, .dove-azioni .pulsante { width: 100%; }
+  .eroe-azioni .pulsante, .ritiro-azioni .pulsante, .dove-azioni .pulsante, .residenza-azioni .pulsante { width: 100%; }
+  .procedura-schede { display: grid; width: 100%; }
   .intestazione .pulsante span { display: none; }
   .auto-scheda em { margin-left: 0; }
   .barra-chiamata { position: fixed; z-index: 60; left: 0; right: 0; bottom: 0; display: block; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); background: rgba(16, 16, 16, .94); backdrop-filter: blur(12px); border-top: 1px solid var(--linea); }

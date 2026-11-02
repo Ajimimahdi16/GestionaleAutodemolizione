@@ -1,4 +1,5 @@
 import { azienda } from '../dati/azienda.js'
+import Procedura from './Procedura.jsx'
 import Rivela from './Rivela.jsx'
 import { IconaCamion, IconaTelefono } from './Icone.jsx'
 
@@ -20,7 +21,7 @@ export default function Ritiro() {
               <h2>Devi demolire il tuo veicolo? Il ritiro è gratuito.</h2>
               <p>
                 Per i veicoli <strong>senza fermo amministrativo</strong> veniamo a ritirare l&apos;auto senza costi per te.
-                Se c&apos;è un fermo amministrativo la procedura è diversa e a pagamento: chiamaci e ti spieghiamo come funziona.
+                Se c&apos;è un fermo amministrativo la procedura è diversa: qui sotto trovi i documenti che servono e come funziona.
               </p>
               <div className="ritiro-azioni">
                 <a className="pulsante pulsante-nero" href={azienda.telefonoUfficio.link}>
@@ -40,6 +41,9 @@ export default function Ritiro() {
               ))}
             </ol>
           </div>
+        </Rivela>
+        <Rivela ritardo={80}>
+          <Procedura />
         </Rivela>
       </div>
     </section>

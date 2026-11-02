@@ -10,6 +10,7 @@ export const azienda = {
   googleMaps: 'https://share.google/bMj0JoDnQ2x3EFPM5',
   indicazioni: 'https://www.google.com/maps/dir/?api=1&destination=Corso+Orbassano+368%2F23%2C+Torino',
   mappaIncorporata: 'https://www.google.com/maps?q=Corso+Orbassano+368%2F23%2C+Torino&output=embed',
+  vigiliTorino: { indirizzo: 'Via Druento 355, Torino', mappa: 'https://www.google.com/maps/search/?api=1&query=Via+Druento+355+Torino' },
   instagram: 'https://www.instagram.com/auto.demolizionericambitorino',
   tiktok: 'https://www.tiktok.com/@autodemolizione_torino',
 }
