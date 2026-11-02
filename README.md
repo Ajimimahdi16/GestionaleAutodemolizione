@@ -59,4 +59,4 @@ La guida passo passo (server, database, HTTPS, backup, sito pubblico) è in [dep
 - Credenziali e chiavi stanno solo nel file `.env`, escluso da Git: il repository è pubblico, non inserire mai segreti nel codice
 
 ## Autore
-Mahdi Ajimi · Master in Web Development, [Boolean](https://www.boolean.careers)
+Mahdi Ajimi · Master in Web Development, [Boolean](https://boolean.careers)
