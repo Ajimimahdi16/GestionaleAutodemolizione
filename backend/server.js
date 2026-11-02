@@ -23,7 +23,15 @@ app.disable('x-powered-by')
 // Online l'app sta dietro Caddy (HTTPS): serve fidarsi di un solo proxy, altrimenti il limite
 // sui tentativi di login vedrebbe sempre lo stesso indirizzo e bloccherebbe tutti insieme.
 if (process.env.TRUST_PROXY === 'true') app.set('trust proxy', 1)
-app.use(helmet())
+// Il sito pubblico mostra la mappa di Google in un riquadro incorporato (solo dopo il clic del visitatore).
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      'frame-src': ["'self'", 'https://www.google.com'],
+    },
+  },
+}))
 app.use(express.json({ limit: '1mb' }))
 app.use((req, res, next) => {
   if (!req.body || Array.isArray(req.body)) req.body = {}
@@ -37,6 +45,15 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(cors({ origin: origine, credentials: true }))
 }
 
+// Con GESTIONALE_HOST impostato, il gestionale risponde solo su quell'indirizzo (es. app.dominio.it);
+// ogni altro indirizzo mostra il sito pubblico e può usare soltanto le API pubbliche.
+const hostGestionale = process.env.GESTIONALE_HOST
+const eHostGestionale = req => !hostGestionale || req.hostname === hostGestionale
+app.use('/api', (req, res, next) => {
+  if (eHostGestionale(req) || req.path.startsWith('/pubblico/')) return next()
+  res.status(404).json({ errore: 'Percorso API non trovato.' })
+})
+
 app.get('/health', (req, res) => res.json({ stato: 'ok', messaggio: 'Server ricambi attivo.' }))
 app.get('/health/database', async (req, res) => {
   try {
@@ -46,6 +63,7 @@ app.get('/health/database', async (req, res) => {
     res.status(503).json({ stato: 'errore', database: 'non disponibile' })
   }
 })
+app.use('/api/pubblico', require('./routes/pubblico')(pool))
 app.use('/api/auth', require('./routes/auth')(pool))
 app.use('/api/pezzi', require('./routes/pezzi')(pool))
 app.use('/api/foto', require('./routes/foto')(pool))
@@ -71,12 +89,27 @@ app.use((errore, req, res, next) => {
   res.status(500).json({ errore: 'Si è verificato un errore interno. Riprova o controlla la connessione al database.' })
 })
 
-// Dopo una build, Express serve anche l'interfaccia React sulla stessa porta delle API.
-const cartellaFrontend = path.resolve(__dirname, '../frontend/dist')
-if (fs.existsSync(path.join(cartellaFrontend, 'index.html'))) {
-  app.use(express.static(cartellaFrontend, { index: false }))
-  app.get('*', (req, res) => res.sendFile(path.join(cartellaFrontend, 'index.html')))
+// Dopo una build, Express serve le interfacce React sulla stessa porta delle API:
+// il gestionale sul suo indirizzo, il sito pubblico su tutti gli altri.
+function interfaccia(cartella) {
+  const indice = path.join(cartella, 'index.html')
+  if (!fs.existsSync(indice)) return null
+  return { statico: express.static(cartella, { index: false }), indice }
 }
+const interfacciaGestionale = interfaccia(path.resolve(__dirname, '../frontend/dist'))
+const interfacciaSito = interfaccia(path.resolve(__dirname, '../sito-pubblico/dist'))
+const sceglieInterfaccia = req => (eHostGestionale(req) ? interfacciaGestionale : interfacciaSito)
+
+app.use((req, res, next) => {
+  const scelta = sceglieInterfaccia(req)
+  if (!scelta) return next()
+  scelta.statico(req, res, next)
+})
+app.get('*', (req, res, next) => {
+  const scelta = sceglieInterfaccia(req)
+  if (!scelta) return next()
+  res.sendFile(scelta.indice)
+})
 
 const porta = Number(process.env.APP_PORT) || 3000
 const host = process.env.APP_HOST || '127.0.0.1'
