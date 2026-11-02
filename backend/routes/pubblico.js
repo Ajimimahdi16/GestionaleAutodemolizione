@@ -72,9 +72,12 @@ module.exports = pool => {
       const where = []
       const params = []
       if (req.query.tipologia_id !== undefined) {
-        const id = Number(req.query.tipologia_id)
-        if (!Number.isInteger(id) || id < 1) return res.status(400).json({ errore: 'Pezzo non valido.' })
-        where.push('p.tipologia_id = ?'); params.push(id)
+        // Accetta uno o più identificativi separati da virgola (es. "2,81"), fino a 6.
+        const ids = typeof req.query.tipologia_id === 'string' ? req.query.tipologia_id.split(',').map(Number) : []
+        if (!ids.length || ids.length > 6 || ids.some(id => !Number.isInteger(id) || id < 1)) {
+          return res.status(400).json({ errore: 'Pezzo non valido.' })
+        }
+        where.push(`p.tipologia_id IN (${ids.map(() => '?').join(', ')})`); params.push(...ids)
       }
       if (req.query.marca !== undefined) {
         if (!testoValido(req.query.marca, 80)) return res.status(400).json({ errore: 'Marca non valida.' })
@@ -90,6 +93,17 @@ module.exports = pool => {
       const [righe] = await pool.execute(sql, params)
       res.set('Cache-Control', 'no-store')
       res.json({ disponibile: righe.length > 0, totale: righe.length, pezzi: righe.map(mappaPezzoPubblico) })
+    } catch (errore) { next(errore) }
+  })
+
+  // Quanti pezzi disponibili ci sono per ogni tipo di pezzo (per i punti sull'auto interattiva).
+  router.get('/disponibilita', async (req, res, next) => {
+    try {
+      const [righe] = await pool.execute(
+        "SELECT tipologia_id, COUNT(*) AS totale FROM pezzi WHERE stato = 'disponibile' GROUP BY tipologia_id",
+      )
+      res.set('Cache-Control', 'public, max-age=30')
+      res.json({ per_tipologia: Object.fromEntries(righe.map(riga => [riga.tipologia_id, Number(riga.totale)])) })
     } catch (errore) { next(errore) }
   })
 
