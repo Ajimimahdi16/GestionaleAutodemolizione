@@ -24,3 +24,4 @@ backups/*
 .DS_Store
 *.log
 npm-debug.log*
+sito-pubblico/dist/
