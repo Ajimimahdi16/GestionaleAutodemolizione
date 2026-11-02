@@ -1,4 +1,4 @@
-// Crea il primo account amministratore senza scrivere password nel codice.
+// Crea un account (amministratore, oppure operatore con --operatore) senza scrivere password nel codice.
 // Richiede le dipendenze dotenv, mysql2 e bcrypt e il file .env nella cartella principale.
 const path = require('path')
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') })
@@ -16,6 +16,9 @@ const pool = mysql.createPool({
   connectionLimit: 2,
   charset: 'utf8mb4',
 })
+
+const ruolo = process.argv.includes('--operatore') ? 'operatore' : 'admin'
+const etichettaRuolo = ruolo === 'admin' ? 'amministratore' : 'operatore'
 
 function chiedi(testo) {
   const interfaccia = readline.createInterface({ input: process.stdin, output: process.stdout })
@@ -78,7 +81,7 @@ async function creaAmministratore() {
     throw new Error('Configurazione database incompleta: controlla il file .env nella cartella principale.')
   }
 
-  const username = await chiedi('Nome utente amministratore: ')
+  const username = await chiedi(`Nome utente ${etichettaRuolo}: `)
   const nome = await chiedi('Nome e cognome: ')
   const password = await chiediPasswordNascosta('Scegli una password (almeno 10 caratteri): ')
   const conferma = await chiediPasswordNascosta('Ripeti la password: ')
@@ -90,15 +93,15 @@ async function creaAmministratore() {
   const passwordHash = await bcrypt.hash(password, 12)
   await pool.execute(
     'INSERT INTO utenti (username, password_hash, nome, ruolo, attivo) VALUES (?, ?, ?, ?, ?)',
-    [username, passwordHash, nome, 'admin', true],
+    [username, passwordHash, nome, ruolo, true],
   )
-  console.log(`Account amministratore "${username}" creato correttamente.`)
+  console.log(`Account ${etichettaRuolo} "${username}" creato correttamente.`)
 }
 
 creaAmministratore()
   .catch(errore => {
     // Non mostriamo dettagli di connessione o informazioni sensibili.
-    console.error(`Impossibile creare l'amministratore: ${errore.message}`)
+    console.error(`Impossibile creare l'account: ${errore.message}`)
     process.exitCode = 1
   })
   .finally(async () => {

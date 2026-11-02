@@ -7,7 +7,8 @@
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
-    "crea-admin": "node scripts/crea-admin.js"
+    "crea-admin": "node scripts/crea-admin.js",
+    "crea-operatore": "node scripts/crea-admin.js --operatore"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
