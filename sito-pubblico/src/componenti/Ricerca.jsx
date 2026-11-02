@@ -5,28 +5,22 @@ import Rivela from './Rivela.jsx'
 import SchedaPezzo from './SchedaPezzo.jsx'
 import { IconaInfo, IconaSpunta, IconaTelefono } from './Icone.jsx'
 
-const filtriVuoti = { tipologie: [], marche: [], modelli: [] }
-
-export default function Ricerca() {
-  const [filtri, setFiltri] = useState(filtriVuoti)
-  const [caricamentoFiltri, setCaricamentoFiltri] = useState(true)
+export default function Ricerca({ filtri, caricamentoFiltri, richiesta }) {
   const [tipologia, setTipologia] = useState('')
   const [marca, setMarca] = useState('')
   const [modello, setModello] = useState('')
+  // Richiesta che arriva dall'auto interattiva: compila il pezzo e azzera marca e modello.
+  const [richiestaApplicata, setRichiestaApplicata] = useState(null)
+  if (richiesta && richiesta !== richiestaApplicata) {
+    setRichiestaApplicata(richiesta)
+    setTipologia(richiesta.ids.join(','))
+    setMarca('')
+    setModello('')
+  }
   const [risposta, setEsito] = useState({ stato: 'inattivo' })
   const ricercaAttiva = Boolean(tipologia || marca || modello)
   // Senza filtri scelti l'esito precedente non va mostrato.
   const esito = ricercaAttiva ? risposta : { stato: 'inattivo' }
-
-  useEffect(() => {
-    const controllo = new AbortController()
-    fetch('/api/pubblico/filtri', { signal: controllo.signal })
-      .then(risposta => { if (!risposta.ok) throw new Error('filtri'); return risposta.json() })
-      .then(dati => setFiltri(dati))
-      .catch(() => {})
-      .finally(() => setCaricamentoFiltri(false))
-    return () => controllo.abort()
-  }, [])
 
   useEffect(() => {
     if (!ricercaAttiva) return undefined
@@ -45,7 +39,12 @@ export default function Ricerca() {
     return () => { window.clearTimeout(timer); controllo.abort() }
   }, [tipologia, marca, modello, ricercaAttiva])
 
-  const opzioniTipologie = useMemo(() => filtri.tipologie.map(voce => ({ valore: String(voce.id), etichetta: voce.nome })), [filtri])
+  const opzioniTipologie = useMemo(() => {
+    const voci = filtri.tipologie.map(voce => ({ valore: String(voce.id), etichetta: voce.nome }))
+    // Il punto dell'auto può raggruppare più tipi di pezzo (es. faro e fanale): diventa una voce del menu.
+    if (richiestaApplicata && richiestaApplicata.ids.length > 1) voci.unshift({ valore: richiestaApplicata.ids.join(','), etichetta: richiestaApplicata.etichetta })
+    return voci
+  }, [filtri, richiestaApplicata])
   const opzioniMarche = useMemo(() => filtri.marche.map(nome => ({ valore: nome, etichetta: nome })), [filtri])
   const opzioniModelli = useMemo(
     () => filtri.modelli.filter(voce => voce.marca === marca).map(voce => ({ valore: voce.modello, etichetta: voce.modello })),
