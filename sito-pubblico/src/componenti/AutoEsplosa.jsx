@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import DisegnoAuto from './DisegnoAuto.jsx'
 import { IconaFreccia } from './Icone.jsx'
 
@@ -8,8 +8,14 @@ export default function AutoEsplosa({ zone, onScegli }) {
   const [sopraId, setSopraId] = useState(null)
   const [apertaId, setApertaId] = useState(null)
   const [soloDisponibili, setSoloDisponibili] = useState(false)
+  const pannello = useRef(null)
   const aperta = zone.find(zona => zona.id === apertaId) || null
   const evidenziata = zone.find(zona => zona.id === (sopraId || apertaId)) || null
+
+  // Quando si apre una zona, porta il pannello dei pezzi in vista (utile soprattutto sul telefono).
+  useEffect(() => {
+    if (apertaId) pannello.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [apertaId])
 
   function alternaZona(zona) {
     setApertaId(corrente => (corrente === zona.id ? null : zona.id))
@@ -55,7 +61,7 @@ export default function AutoEsplosa({ zone, onScegli }) {
       </div>
 
       {aperta && (
-        <section className="esploso" key={aperta.id} aria-label={`Pezzi: ${aperta.etichetta}`}>
+        <section className="esploso" ref={pannello} key={aperta.id} aria-label={`Pezzi: ${aperta.etichetta}`}>
           <header>
             <div>
               <h2>{aperta.etichetta}</h2>
