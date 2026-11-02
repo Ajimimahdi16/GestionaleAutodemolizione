@@ -15,9 +15,8 @@ const limite = rateLimit({
   message: { errore: 'Troppe richieste. Riprova tra qualche istante.' },
 })
 
-function etichetta(mappa, valore) {
-  return mappa[valore] || valore
-}
+const etichetteLato = { dx: 'Destro', sx: 'Sinistro', nessuno: '' }
+const maiuscola = testo => (testo ? testo[0].toUpperCase() + testo.slice(1) : '')
 
 // Solo i dati utili al cliente: niente prezzo, codici interni, note né dati di inserimento.
 function mappaPezzoPubblico(riga) {
@@ -28,9 +27,9 @@ function mappaPezzoPubblico(riga) {
     modello: riga.modello,
     anno: riga.anno,
     colore: riga.colore,
-    lato: etichetta({ dx: 'Destro', sx: 'Sinistro', nessuno: '' }, riga.lato),
-    posizione: riga.posizione === 'altro' ? '' : riga.posizione,
-    condizione: riga.condizione,
+    lato: Object.hasOwn(etichetteLato, riga.lato) ? etichetteLato[riga.lato] : maiuscola(riga.lato),
+    posizione: riga.posizione === 'altro' ? '' : maiuscola(riga.posizione),
+    condizione: maiuscola(riga.condizione),
     foto: riga.foto ? `/api/pubblico/foto/${encodeURIComponent(riga.foto)}` : null,
   }
 }
