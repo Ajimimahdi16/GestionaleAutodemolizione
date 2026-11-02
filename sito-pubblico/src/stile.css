@@ -103,6 +103,8 @@ button { font: inherit; cursor: pointer; }
 .auto-gomma { fill: #0d0d0c; stroke-width: 3.5; }
 .auto-fanale-ant { fill: rgba(255, 255, 255, .2); stroke-width: 2.5; }
 .auto-fanale-post { fill: rgba(255, 70, 70, .3); stroke-width: 2.5; }
+.auto-razze { stroke-width: 4; }
+.auto-mozzo { fill: #0d0d0c; stroke-width: 3; }
 .auto-ruota-disegno { transform-box: fill-box; transform-origin: center; animation: gira 2.4s cubic-bezier(.16, .8, .24, 1) .4s both; }
 @keyframes gira { from { transform: rotate(-540deg); } to { transform: rotate(0); } }
 .auto-evidenza { fill: rgba(255, 196, 0, .34); stroke: var(--giallo); stroke-width: 2; pointer-events: none; animation: compare .18s ease both; }
