@@ -134,7 +134,8 @@ password=PASSWORD_BACKUP
 CNF
 sudo chmod 600 /opt/gestionale/.backup.cnf
 sudo -u gestionale /opt/gestionale/deploy/backup.sh      # prova subito
-(sudo -u gestionale crontab -l 2>/dev/null; echo '30 2 * * * /opt/gestionale/deploy/backup.sh >> /opt/gestionale/backups/backup.log 2>&1') | sudo -u gestionale crontab -
+echo "30 2 * * * gestionale /opt/gestionale/deploy/backup.sh >> /opt/gestionale/backups/backup.log 2>&1" | sudo tee /etc/cron.d/gestionale-backup
+sudo chmod 644 /etc/cron.d/gestionale-backup
 ```
 I backup restano 14 giorni in `/opt/gestionale/backups`. In più gli snapshot automatici di Lightsail salvano l'intero server.
 **Prova un ripristino** su un server di prova prima di fidarti: un backup mai provato non è un backup.
