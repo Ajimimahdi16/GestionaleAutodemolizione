@@ -48,8 +48,63 @@ function testoValido(valore, massimo) {
   return typeof valore === 'string' && valore.trim().length > 0 && valore.trim().length <= massimo
 }
 
+// Recensioni di Google Maps (Places API). Si attivano solo se nel file .env ci sono la chiave e l'ID del luogo;
+// la chiave resta sul server e non arriva mai al browser. Il risultato è tenuto in memoria per qualche ora,
+// così il sito non fa una chiamata a Google per ogni visitatore.
+const DURATA_CACHE_RECENSIONI = 6 * 60 * 60 * 1000
+let cacheRecensioni = { scadenza: 0, dati: null }
+
+async function leggiRecensioniGoogle() {
+  const chiave = process.env.GOOGLE_PLACES_API_KEY
+  const idLuogo = process.env.GOOGLE_PLACE_ID
+  if (!chiave || !idLuogo) return { attive: false }
+  if (cacheRecensioni.dati && Date.now() < cacheRecensioni.scadenza) return cacheRecensioni.dati
+
+  const controllo = new AbortController()
+  const timer = setTimeout(() => controllo.abort(), 6000)
+  try {
+    const risposta = await fetch(
+      `https://places.googleapis.com/v1/places/${encodeURIComponent(idLuogo)}?languageCode=it`,
+      {
+        signal: controllo.signal,
+        headers: { 'X-Goog-Api-Key': chiave, 'X-Goog-FieldMask': 'rating,userRatingCount,googleMapsUri,reviews' },
+      },
+    )
+    if (!risposta.ok) throw new Error(`Google ha risposto ${risposta.status}`)
+    const luogo = await risposta.json()
+    const dati = {
+      attive: true,
+      valutazione: typeof luogo.rating === 'number' ? luogo.rating : null,
+      totale: Number(luogo.userRatingCount) || 0,
+      mappa: luogo.googleMapsUri || null,
+      recensioni: (luogo.reviews || []).slice(0, 5).map(recensione => ({
+        autore: recensione.authorAttribution?.displayName || 'Utente Google',
+        stelle: Math.max(0, Math.min(5, Math.round(Number(recensione.rating) || 0))),
+        testo: (recensione.text?.text || recensione.originalText?.text || '').slice(0, 600),
+        quando: recensione.relativePublishTimeDescription || '',
+      })).filter(recensione => recensione.testo),
+    }
+    cacheRecensioni = { scadenza: Date.now() + DURATA_CACHE_RECENSIONI, dati }
+    return dati
+  } catch (errore) {
+    console.error('Recensioni Google non disponibili:', errore.message)
+    // In caso di errore si riprova tra poco; intanto il sito mostra l'invito a leggere le recensioni su Google.
+    cacheRecensioni = { scadenza: Date.now() + 5 * 60 * 1000, dati: { attive: false } }
+    return cacheRecensioni.dati
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 module.exports = pool => {
   router.use(limite)
+
+  router.get('/recensioni', async (req, res, next) => {
+    try {
+      res.set('Cache-Control', 'public, max-age=600')
+      res.json(await leggiRecensioniGoogle())
+    } catch (errore) { next(errore) }
+  })
 
   // Elenchi per i menu a tendina: tutto il catalogo, anche i pezzi oggi non disponibili.
   router.get('/filtri', async (req, res, next) => {
