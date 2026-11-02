@@ -5,6 +5,7 @@
 #   user=ricambi_backup
 #   password=LA_PASSWORD
 set -euo pipefail
+cd /opt/gestionale
 CARTELLA=/opt/gestionale/backups
 DATA=$(date +%Y-%m-%d_%H%M)
 mkdir -p "$CARTELLA"
