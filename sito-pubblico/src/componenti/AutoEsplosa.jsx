@@ -2,6 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import DisegnoAuto from './DisegnoAuto.jsx'
 import { IconaFreccia } from './Icone.jsx'
 
+function testoDisponibilita(numero) {
+  if (numero === null) return 'Controllo la disponibilità…'
+  if (numero === 0) return 'Al momento nessun pezzo disponibile'
+  return numero === 1 ? '✓ 1 pezzo disponibile' : `✓ ${numero} pezzi disponibili`
+}
+
 // L'auto si "apre": toccando una zona il pezzo di carrozzeria si stacca, compaiono i componenti interni
 // e sotto si apre l'elenco dei pezzi di quella zona, con la disponibilità reale del magazzino.
 export default function AutoEsplosa({ zone, onScegli }) {
@@ -52,7 +58,7 @@ export default function AutoEsplosa({ zone, onScegli }) {
         {evidenziata ? (
           <>
             <strong>{evidenziata.etichetta}</strong>
-            <span className="auto-stato si">{evidenziata.tipiDisponibili === null ? '' : `${evidenziata.tipiDisponibili} tipi di pezzo disponibili`}</span>
+            <span className={`auto-stato ${evidenziata.pezziDisponibili === 0 ? 'no' : 'si'}`}>{testoDisponibilita(evidenziata.pezziDisponibili)}</span>
             <em>{apertaId === evidenziata.id ? 'Clicca ancora per richiudere' : 'Clicca per aprire'} <IconaFreccia /></em>
           </>
         ) : (
@@ -66,6 +72,7 @@ export default function AutoEsplosa({ zone, onScegli }) {
             <div>
               <h2>{aperta.etichetta}</h2>
               <p>{aperta.intro} Scegli un pezzo per vedere i dettagli.</p>
+              <p className={`esploso-totale ${aperta.pezziDisponibili ? 'si' : 'no'}`}>{testoDisponibilita(aperta.pezziDisponibili)}</p>
             </div>
             <div className="esploso-comandi">
               <label className="esploso-filtro">

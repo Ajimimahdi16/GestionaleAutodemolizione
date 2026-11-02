@@ -14,9 +14,19 @@ export function useCatalogoPubblico() {
       if (!risposta.ok) throw new Error(indirizzo)
       return risposta.json()
     })
+    const aggiornaDisponibilita = () => leggi('/api/pubblico/disponibilita').then(dati => setDisponibilita(dati.per_tipologia)).catch(() => {})
     leggi('/api/pubblico/filtri').then(setFiltri).catch(() => {}).finally(() => setCaricamento(false))
-    leggi('/api/pubblico/disponibilita').then(dati => setDisponibilita(dati.per_tipologia)).catch(() => {})
-    return () => controllo.abort()
+    aggiornaDisponibilita()
+
+    // I pezzi cambiano mentre il sito è aperto: si rilegge ogni minuto e quando si torna sulla scheda del browser.
+    const timer = window.setInterval(aggiornaDisponibilita, 60 * 1000)
+    const alRitorno = () => { if (document.visibilityState === 'visible') aggiornaDisponibilita() }
+    document.addEventListener('visibilitychange', alRitorno)
+    return () => {
+      controllo.abort()
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', alRitorno)
+    }
   }, [])
 
   return { filtri, disponibilita, caricamento }
@@ -38,7 +48,9 @@ export function collegaZone(zone, tipologie, disponibilita) {
       })
       return { titolo: gruppo.titolo, voci }
     }).filter(gruppo => gruppo.voci.length)
-    const totale = gruppi.reduce((somma, gruppo) => somma + gruppo.voci.filter(voce => voce.disponibili > 0).length, 0)
-    return { ...zona, gruppi, tipiDisponibili: disponibilita ? totale : null }
+    // Pezzi disponibili nella zona: ogni tipo di pezzo si conta una volta sola, anche se è in più gruppi.
+    const perId = new Map(gruppi.flatMap(gruppo => gruppo.voci).map(voce => [voce.id, voce.disponibili || 0]))
+    const pezziDisponibili = [...perId.values()].reduce((somma, numero) => somma + numero, 0)
+    return { ...zona, gruppi, pezziDisponibili: disponibilita ? pezziDisponibili : null }
   }).filter(zona => zona.gruppi.length)
 }
