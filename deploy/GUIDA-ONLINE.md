@@ -178,3 +178,34 @@ Controlli: `https://tuodominio.it` mostra il sito pubblico; `https://app.tuodomi
 **Contenuti da aggiornare nel codice** (poi build e riavvio come al punto 11):
 - recensioni reali: `sito-pubblico/src/dati/recensioni.js` (copiate dalla scheda Google, mai inventate);
 - orari, telefoni, indirizzo e link social: `sito-pubblico/src/dati/azienda.js`.
+
+## 14. Recensioni di Google Maps nel sito (automatiche)
+
+Il sito può mostrare la valutazione e le recensioni della scheda Google dell'attività. Si attiva da sola quando nel file
+`.env` del server ci sono `GOOGLE_PLACES_API_KEY` e `GOOGLE_PLACE_ID`; senza, il sito mostra solo il link alle recensioni.
+
+Limiti da conoscere:
+- Google restituisce al massimo **5 recensioni**, scelte da lui (le "più pertinenti"), non tutte e non le ultime.
+- Serve un account **Google Cloud con fatturazione attiva** (carta di credito). Per un uso così piccolo si resta di norma sotto
+  le soglie gratuite, ma **controlla i prezzi attuali** e imposta un avviso di spesa.
+- Le condizioni d'uso di Google limitano per quanto tempo si possono conservare i dati: il sito li tiene in memoria solo 6 ore.
+
+**Passi**
+1. **ID del luogo:** apri https://developers.google.com/maps/documentation/places/web-service/place-id , cerca
+   "Autodemolizione Ricambi Torino, Corso Orbassano 368/23, Torino" e copia il **Place ID** (inizia con `ChIJ`).
+2. **Google Cloud:** su https://console.cloud.google.com crea un progetto, attiva la fatturazione e imposta un **budget con avviso**.
+3. **Abilita l'API:** "API e servizi" → "Libreria" → **Places API (New)** → Abilita.
+4. **Chiave API:** "API e servizi" → "Credenziali" → "Crea credenziali" → "Chiave API". Poi **limitala**:
+   - Restrizioni API: solo **Places API (New)**;
+   - Restrizioni applicazione: **Indirizzi IP** → l'IP del server (`13.50.125.91`).
+5. **Quota:** "Quote" → imposta un limite basso di richieste al giorno (es. 50) per evitare sorprese.
+6. **Sul server:**
+   ```bash
+   sudo nano /opt/gestionale/.env      # aggiungi le due righe
+   # GOOGLE_PLACES_API_KEY=la-chiave
+   # GOOGLE_PLACE_ID=ChIJ...
+   sudo systemctl restart gestionale
+   ```
+7. Controllo: `curl -s http://127.0.0.1:3000/api/pubblico/recensioni` deve mostrare `"attive":true`.
+
+Non incollare mai la chiave in chat, nel codice o su GitHub: sta solo nel file `.env`.

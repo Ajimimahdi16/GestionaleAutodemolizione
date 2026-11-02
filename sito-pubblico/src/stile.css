@@ -279,6 +279,9 @@ button { font: inherit; cursor: pointer; }
 .recensione { height: 100%; margin: 0; padding: 26px; background: var(--carbone); border: 1px solid var(--linea); border-radius: 6px; }
 .recensione blockquote { margin: 14px 0 16px; font-size: 17px; }
 .recensione figcaption { color: var(--attenuato); font-size: 14px; font-weight: 700; }
+.recensione figcaption em { display: block; margin-top: 4px; font-style: normal; font-weight: 500; font-size: 12px; letter-spacing: .04em; color: #77776f; }
+.recensioni-media { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 14px 0 0; color: var(--attenuato); font-size: 17px; }
+.recensioni-media strong { color: var(--testo); font-family: var(--titoli); font-size: 20px; }
 .stelle { display: inline-flex; gap: 3px; }
 .recensioni-invito { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px; margin-top: 34px; padding: clamp(22px, 3vw, 34px); background: var(--carbone); border: 1px solid var(--linea); border-left: 5px solid var(--giallo); border-radius: 6px; }
 .recensioni-invito > div { display: grid; gap: 6px; max-width: 640px; }
