@@ -34,3 +34,22 @@ export function collegaParti(parti, tipologie, disponibilita) {
     return [{ ...parte, ids, disponibili }]
   })
 }
+
+// Collega i gruppi di ogni zona ai tipi di pezzo esistenti, con la disponibilità di ciascuno.
+export function collegaZone(zone, tipologie, disponibilita) {
+  const perNome = new Map(tipologie.map(voce => [normalizza(voce.nome), voce]))
+  return zone.map(zona => {
+    const gruppi = zona.gruppi.map(gruppo => {
+      const visti = new Set()
+      const voci = gruppo.nomi.flatMap(nome => {
+        const tipo = perNome.get(normalizza(nome))
+        if (!tipo || visti.has(tipo.id)) return []
+        visti.add(tipo.id)
+        return [{ id: tipo.id, nome: tipo.nome, disponibili: disponibilita ? (disponibilita[tipo.id] || 0) : null }]
+      })
+      return { titolo: gruppo.titolo, voci }
+    }).filter(gruppo => gruppo.voci.length)
+    const totale = gruppi.reduce((somma, gruppo) => somma + gruppo.voci.filter(voce => voce.disponibili > 0).length, 0)
+    return { ...zona, gruppi, tipiDisponibili: disponibilita ? totale : null }
+  }).filter(zona => zona.gruppi.length)
+}
