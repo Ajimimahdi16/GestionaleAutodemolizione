@@ -24,17 +24,6 @@ export function useCatalogoPubblico() {
 
 const normalizza = testo => testo.normalize('NFD').replace(/[̀-ͯ]/g, '').toLocaleLowerCase('it').trim()
 
-// Collega ogni punto dell'auto ai tipi di pezzo esistenti e somma i pezzi disponibili.
-export function collegaParti(parti, tipologie, disponibilita) {
-  const perNome = new Map(tipologie.map(voce => [normalizza(voce.nome), voce.id]))
-  return parti.flatMap(parte => {
-    const ids = parte.nomi.map(nome => perNome.get(normalizza(nome))).filter(Boolean)
-    if (!ids.length) return []
-    const disponibili = disponibilita ? ids.reduce((somma, id) => somma + (disponibilita[id] || 0), 0) : null
-    return [{ ...parte, ids, disponibili }]
-  })
-}
-
 // Collega i gruppi di ogni zona ai tipi di pezzo esistenti, con la disponibilità di ciascuno.
 export function collegaZone(zone, tipologie, disponibilita) {
   const perNome = new Map(tipologie.map(voce => [normalizza(voce.nome), voce]))

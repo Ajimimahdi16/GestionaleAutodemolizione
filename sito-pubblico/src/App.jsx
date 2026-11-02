@@ -14,7 +14,7 @@ import Social from './componenti/Social.jsx'
 
 export default function App() {
   const { filtri, disponibilita, caricamento } = useCatalogoPubblico()
-  // Quando si tocca un punto dell'auto, la ricerca si compila e la pagina scorre ai risultati.
+  // Quando si sceglie un pezzo dall'auto, la ricerca si compila e la pagina scorre ai risultati.
   const [richiesta, setRichiesta] = useState(null)
 
   function scegliParte(parte) {

@@ -107,17 +107,6 @@ button { font: inherit; cursor: pointer; }
 .auto-mozzo { fill: #0d0d0c; stroke-width: 3; }
 .auto-ruota-disegno { transform-box: fill-box; transform-origin: center; animation: gira 2.4s cubic-bezier(.16, .8, .24, 1) .4s both; }
 @keyframes gira { from { transform: rotate(-540deg); } to { transform: rotate(0); } }
-.auto-evidenza { fill: rgba(255, 196, 0, .34); stroke: var(--giallo); stroke-width: 2; pointer-events: none; animation: compare .18s ease both; }
-
-.punto { cursor: pointer; outline: none; animation: compare .6s ease 1.6s both; }
-.punto-area { fill: transparent; }
-.punto-nucleo { fill: var(--giallo); stroke: #0d0d0c; stroke-width: 2.5; transition: r .15s ease; }
-.punto-onda { fill: rgba(255, 196, 0, .35); transform-box: fill-box; transform-origin: center; animation: onda 2.4s ease-out infinite; pointer-events: none; }
-@keyframes onda { 0% { transform: scale(.8); opacity: .9; } 100% { transform: scale(2.8); opacity: 0; } }
-.punto.attivo .punto-nucleo { r: 12px; }
-.punto:focus-visible .punto-area { stroke: var(--giallo); stroke-width: 2; }
-.punto.esaurito .punto-nucleo { fill: #6f6f67; }
-.punto.esaurito .punto-onda { animation: none; opacity: 0; }
 
 .auto-scheda { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 22px; min-height: 76px; margin-top: 8px; padding: 16px 22px; background: rgba(24, 24, 22, .88); border: 1px solid var(--linea); border-left: 4px solid var(--giallo); border-radius: 6px; backdrop-filter: blur(6px); }
 .auto-scheda strong { font-family: var(--titoli); font-size: 21px; }
@@ -329,9 +318,6 @@ button { font: inherit; cursor: pointer; }
   .social-griglia { grid-template-columns: 1fr; }
   .eroe-azioni .pulsante, .ritiro-azioni .pulsante, .dove-azioni .pulsante { width: 100%; }
   .intestazione .pulsante span { display: none; }
-  .punto-area { r: 40px; }
-  .punto-nucleo { r: 15px; }
-  .punto.attivo .punto-nucleo { r: 18px; }
   .auto-scheda em { margin-left: 0; }
   .barra-chiamata { position: fixed; z-index: 60; left: 0; right: 0; bottom: 0; display: block; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); background: rgba(16, 16, 16, .94); backdrop-filter: blur(12px); border-top: 1px solid var(--linea); }
   .barra-chiamata .pulsante { width: 100%; }

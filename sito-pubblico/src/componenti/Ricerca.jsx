@@ -41,7 +41,7 @@ export default function Ricerca({ filtri, caricamentoFiltri, richiesta }) {
 
   const opzioniTipologie = useMemo(() => {
     const voci = filtri.tipologie.map(voce => ({ valore: String(voce.id), etichetta: voce.nome }))
-    // Il punto dell'auto può raggruppare più tipi di pezzo (es. faro e fanale): diventa una voce del menu.
+    // Una richiesta che raggruppa più tipi di pezzo (es. faro e fanale) diventa una voce del menu.
     if (richiestaApplicata && richiestaApplicata.ids.length > 1) voci.unshift({ valore: richiestaApplicata.ids.join(','), etichetta: richiestaApplicata.etichetta })
     return voci
   }, [filtri, richiestaApplicata])
