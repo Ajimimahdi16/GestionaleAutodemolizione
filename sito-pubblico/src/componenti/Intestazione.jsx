@@ -6,7 +6,7 @@ export default function Intestazione() {
     <header className="intestazione">
       <div className="contenitore intestazione-dentro">
         <a className="marchio" href="#inizio" aria-label={`${azienda.nome}, inizio pagina`}>
-          <img src="/logo.png" alt={azienda.nome} width="276" height="176" />
+          <img src="/logo.jpg" alt={azienda.nome} width="512" height="326" />
         </a>
         <nav className="menu-principale" aria-label="Sezioni del sito">
           <a href="#cerca">Cerca ricambi</a>

@@ -54,8 +54,8 @@ button { font: inherit; cursor: pointer; }
 
 /* ---------- Intestazione ---------- */
 .intestazione { position: sticky; top: 0; z-index: 50; background: rgba(16, 16, 16, .86); backdrop-filter: blur(14px); border-bottom: 1px solid var(--linea); }
-.intestazione-dentro { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 72px; }
-.marchio img { width: 82px; height: auto; border-radius: 4px; border-top: 2px solid var(--giallo); box-shadow: 0 4px 14px rgba(0, 0, 0, .5); }
+.intestazione-dentro { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 92px; }
+.marchio img { display: block; width: 122px; height: auto; border-radius: 6px; border: 1px solid #3a3a34; border-top: 3px solid var(--giallo); box-shadow: 0 4px 14px rgba(0, 0, 0, .5); }
 .menu-principale { display: flex; gap: 30px; margin-left: auto; font-family: var(--titoli); font-weight: 700; font-size: 14px; color: var(--attenuato); }
 .menu-principale a { position: relative; padding: 6px 0; transition: color .18s; }
 .menu-principale a::after { content: ''; position: absolute; left: 0; right: 100%; bottom: 0; height: 2px; background: var(--giallo); transition: right .22s ease; }
