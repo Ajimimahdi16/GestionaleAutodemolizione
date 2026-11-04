@@ -331,6 +331,7 @@ button { font: inherit; cursor: pointer; }
 /* ---------- Piede di pagina ---------- */
 .piede { padding: 40px 0 46px; background: #0a0a09; border-top: 1px solid var(--linea); color: var(--attenuato); font-size: 15px; }
 .piede-dentro { display: grid; gap: 18px; }
+.piede-marchio { display: block; width: 190px; height: auto; border-radius: 8px; border: 1px solid #3a3a34; border-top: 3px solid var(--giallo); }
 .piede strong { display: block; color: var(--testo); font-family: var(--titoli); font-size: 17px; }
 .piede-contatti { display: flex; flex-wrap: wrap; gap: 8px 28px; }
 .piede-contatti a:hover { color: var(--giallo); }

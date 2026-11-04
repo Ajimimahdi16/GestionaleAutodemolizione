@@ -6,6 +6,7 @@ export default function PiedeDiPagina() {
   return (
     <footer className="piede">
       <div className="contenitore piede-dentro">
+        <img className="piede-marchio" src="/logo.jpg" alt={azienda.nome} width="512" height="326" loading="lazy" />
         <div>
           <strong>{azienda.ragioneSociale}</strong>
           <span>{azienda.indirizzo}, {azienda.citta} · P.IVA {azienda.partitaIva}</span>
